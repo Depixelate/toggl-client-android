@@ -2,7 +2,7 @@
 List of helper functions when dealing with toggl timers.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import logging
 from pprint import pformat
 import requests
@@ -34,6 +34,9 @@ def get_now_utc() -> datetime:
     returns the current time in utc
     """
     return datetime.now(timezone.utc)
+
+def get_now():
+    return datetime.now(timezone(timedelta(hours=5, minutes=30), name="IST"))
 
 
 def to_toggl_format(dtime: datetime):
@@ -215,6 +218,6 @@ def to_local(d_time: datetime):
     """
     converts a datetime in some other timezone to local time
     """
-    now = datetime.now().astimezone()
+    now = get_now()
     local = now + (d_time - now)
     return local

@@ -12,7 +12,8 @@ import toggl
 import ifttt
 import requests
 
-PATH_PREFIX = "" #str(Path.home()) + "/data"  
+#PATH_PREFIX = "" #str(Path.home()) + "/data"  
+GET_PREV = True
 
 app = func.FunctionApp()
 
@@ -132,7 +133,7 @@ def main():
         cur_time_utc = toggl.get_now_utc()
         logging.info("Now in UTC: %s", cur_time_utc)
 
-        cur_time = datetime.now().astimezone()
+        cur_time = toggl.get_now()#datetime.now().astimezone()
         end = start + timedelta(minutes=toggl.TASK_DEFAULT_THRESH)
         #tags = cur_timer["tags"]
 
@@ -163,9 +164,17 @@ def main():
             end = start + timedelta(minutes=int(results["duration"][0]))
         
         logging.info("Timer Expected End: %s", toggl.to_local(end))
+
+        if not results["count"]:
+            entries = toggl.get_entries()
+            for entry in entries:
+                results = get_results(regexs, entry['description'])
+                if results["count"]:
+                    break
+            else:
+                results["count"] = ["0"]
         
-        if results["count"]:
-            punish_val = update_punish_val(int(results["count"][0]))
+        punish_val = update_punish_val(int(results["count"][0]))    
         
         desc_no_extras = remove_extras(regexs, desc)
 
@@ -196,7 +205,7 @@ def main():
                 extra = (cur_time_utc - end).total_seconds()
                 extra = int(extra / PERIOD)
 
-                punish_val = update_punish_val(punish_val + datetime.now().minute + 1 + extra)
+                punish_val = update_punish_val(punish_val + toggl.get_now().minute + 1 + extra)
 
                 new_desc = gen_new_desc(toggl.PUNISH_TIMER_NAME, punish_val)
                 # last_update = cur_time_utc
