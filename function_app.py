@@ -2,40 +2,38 @@
 Checks toggl track to see if person idle for too long, if so punishes them.
 """
 import logging
-import azure.functions as func
-from pathlib import Path  
-import time
 import re
-from datetime import datetime, timedelta
-import shelve
+from datetime import timedelta
+import azure.functions as func
 import toggl
 import ifttt
-import requests
 
-#PATH_PREFIX = "" #str(Path.home()) + "/data"  
+# PATH_PREFIX = "" #str(Path.home()) + "/data"
 GET_PREV = True
 
 app = func.FunctionApp()
 
-@app.schedule(schedule="0 * * * * *", arg_name="myTimer", run_on_startup=True,
-              use_monitor=False) 
-def timer_trigger(myTimer: func.TimerRequest) -> None:
-    if myTimer.past_due:
-        logging.info('The timer is past due!')
+
+@app.schedule(
+    schedule="0 * * * * *", arg_name="myTimer", run_on_startup=True, use_monitor=False
+)
+def timer_trigger(my_timer: func.TimerRequest) -> None:
+    """
+    The basic timer trigger function.
+    """
+    if my_timer.past_due:
+        logging.info("The timer is past due!")
 
     main()
 
-
-
     #!/usr/bin/python3
-
 
 
 PERIOD = 60
 
 COUNT_KEY = "punish_val"
 # LAST_UPDATE_KEY = "last_update"
-#DATA_PATH = f"{PATH_PREFIX}/punish_data.db"
+# DATA_PATH = f"{PATH_PREFIX}/punish_data.db"
 
 
 def gen_new_desc(desc_no_extras, punish_val, end=None):
@@ -97,7 +95,7 @@ def main():
     regexs["duration"] = r"^\((\d+)\)"
     regexs["count"] = r"\(\s*count:\s*(\d+)\s*\)$"
 
-    logging.info("Entered Main")
+    logging.info("Entered Main V2")
 
     # next_time += PERIOD
     # scheduler.enterabs(next_time, 1, main, (scheduler, next_time))
@@ -108,11 +106,11 @@ def main():
         #         shelf[COUNT_KEY] if COUNT_KEY in shelf else 0
         #     )
         punish_val = 120
-            # last_update = (
-            #     shelf[LAST_UPDATE_KEY]
-            #     if LAST_UPDATE_KEY in shelf
-            #     else toggl.get_now_utc()
-            # )
+        # last_update = (
+        #     shelf[LAST_UPDATE_KEY]
+        #     if LAST_UPDATE_KEY in shelf
+        #     else toggl.get_now_utc()
+        # )
 
         workspace_id = toggl.get_default_workspace_id()
         cur_timer = toggl.get_curr_timer()
@@ -133,49 +131,45 @@ def main():
         cur_time_utc = toggl.get_now_utc()
         logging.info("Now in UTC: %s", cur_time_utc)
 
-        cur_time = toggl.get_now()#datetime.now().astimezone()
+        cur_time = toggl.get_now()  # datetime.now().astimezone()
         end = start + timedelta(minutes=toggl.TASK_DEFAULT_THRESH)
-        #tags = cur_timer["tags"]
-
-        
+        # tags = cur_timer["tags"]
 
         # for tag in tags:
         #     ret = re.findall(TIME_REGEX, tag)
         #     if ret:
         #         hour, minute = [int(field) for field in ret[0]]
-        #         
+        #
         #         break
 
         #     ret = re.findall(NUM_REGEX, tag)
         #     if ret:
-        #         
+        #
         #         break
 
         results = get_results(regexs, desc)
         if results["time"]:
             hour, minute = [int(field) for field in results["time"][0]]
-            end = cur_time.replace(
-                    hour=hour, minute=minute, second=0, microsecond=0
-                )
+            end = cur_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
             end = toggl.to_utc(end)
             while end <= start:
                 end += timedelta(hours=12)
         elif results["duration"]:
             end = start + timedelta(minutes=int(results["duration"][0]))
-        
+
         logging.info("Timer Expected End: %s", toggl.to_local(end))
 
         if not results["count"]:
             entries = toggl.get_entries()
             for entry in entries:
-                results = get_results(regexs, entry['description'])
+                results = get_results(regexs, entry["description"])
                 if results["count"]:
                     break
             else:
                 results["count"] = ["0"]
-        
-        punish_val = update_punish_val(int(results["count"][0]))    
-        
+
+        punish_val = update_punish_val(int(results["count"][0]))
+
         desc_no_extras = remove_extras(regexs, desc)
 
         # if not re.search(COUNT_REGEXP, desc):
@@ -205,14 +199,18 @@ def main():
                 extra = (cur_time_utc - end).total_seconds()
                 extra = int(extra / PERIOD)
 
-                punish_val = update_punish_val(punish_val + toggl.get_now().minute + 1 + extra)
+                punish_val = update_punish_val(
+                    punish_val + toggl.get_now().minute + 1 + extra
+                )
 
                 new_desc = gen_new_desc(toggl.PUNISH_TIMER_NAME, punish_val)
                 # last_update = cur_time_utc
 
                 toggl.start_timer(cur_time_utc, new_desc, workspace_id)
             else:
-                new_desc = gen_new_desc(toggl.NOTHING_TIMER_NAME, punish_val, end + timedelta(minutes=2))
+                new_desc = gen_new_desc(
+                    toggl.NOTHING_TIMER_NAME, punish_val, end + timedelta(minutes=2)
+                )
                 ifttt.phone_notification()
                 toggl.start_timer(end, new_desc, workspace_id)
         elif desc != new_desc:
@@ -223,7 +221,7 @@ def main():
 
         # with shelve.open(DATA_PATH) as shelf:
         #     shelf[COUNT_KEY] = punish_val
-            # shelf[LAST_UPDATE_KEY] = last_update
+        # shelf[LAST_UPDATE_KEY] = last_update
     except Exception as _:  # pylint: disable=W0718
         logging.exception("Ran into the following error: ")
 
@@ -234,8 +232,8 @@ def main():
 #     format="%(asctime)s %(levelname)s:%(message)s",
 #     level=logging.INFO,
 # )
-#logging.info("=================NEW RUN=====================")
-#my_scheduler = sched.scheduler(time.time, time.sleep)
-#start_time = time.time()
+# logging.info("=================NEW RUN=====================")
+# my_scheduler = sched.scheduler(time.time, time.sleep)
+# start_time = time.time()
 # my_scheduler.enterabs(start_time, 1, main, (my_scheduler, start_time))
 # my_scheduler.run()

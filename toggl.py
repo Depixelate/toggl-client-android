@@ -18,6 +18,7 @@ BREAK_TIMER_NAME = "Break"
 NOTHING_THRESH = 2
 TASK_DEFAULT_THRESH = 25
 
+
 def log_str(obj):
     """
     Takes an object, and returns a logging string displaying all its variables,
@@ -35,7 +36,11 @@ def get_now_utc() -> datetime:
     """
     return datetime.now(timezone.utc)
 
+
 def get_now():
+    """
+    returns the current time in IST
+    """
     return datetime.now(timezone(timedelta(hours=5, minutes=30), name="IST"))
 
 
