@@ -185,7 +185,11 @@ def main():
 
         if desc_no_extras.casefold() == toggl.PUNISH_TIMER_NAME.casefold():
             if(cur_time.hour >= 0 and cur_time.hour <= 1):
+                count_since_start = int((cur_time_utc-start).total_seconds()/PERIOD)
+                punish_val = update_punish_val(punish_val-count_since_start)
+                logging.info("Count since start: %d", count_since_start)
                 new_desc = f"(06:00)Sleep(count: {punish_val})"
+                logging.info("Created a sleep toggl timer, new punish val: %d", punish_val)
             else:
                 last_update = toggl.from_toggl_format(cur_timer["at"])
                 logging.info("Last time timer updated: %s", last_update)
