@@ -9,7 +9,6 @@ import toggl
 import ifttt
 
 # PATH_PREFIX = "" #str(Path.home()) + "/data"
-GET_PREV = True
 
 app = func.FunctionApp()
 
@@ -96,7 +95,7 @@ def main():
     regexs["duration"] = r"^\((\d+)\)"
     regexs["count"] = r"\(\s*count:\s*(\d+)\s*\)$"
 
-    logging.info("Entered Main V2")
+    logging.info("Entered Main V3")
 
     # next_time += PERIOD
     # scheduler.enterabs(next_time, 1, main, (scheduler, next_time))
@@ -185,14 +184,17 @@ def main():
         new_desc = gen_new_desc(desc_no_extras, punish_val, end)
 
         if desc_no_extras.casefold() == toggl.PUNISH_TIMER_NAME.casefold():
-            last_update = toggl.from_toggl_format(cur_timer["at"])
-            logging.info("Last time timer updated: %s", last_update)
-            time_since_update = cur_time_utc - last_update
-            secs_since_update = time_since_update.total_seconds()
-            punish_amount = round(secs_since_update / PERIOD)
-            punish_val = update_punish_val(punish_val + punish_amount)
-            # last_update = cur_time_utc
-            new_desc = gen_new_desc(desc_no_extras, punish_val)
+            if(cur_time.hour >= 0 and cur_time.hour <= 1):
+                new_desc = f"(06:00)Sleep(count: {punish_val})"
+            else:
+                last_update = toggl.from_toggl_format(cur_timer["at"])
+                logging.info("Last time timer updated: %s", last_update)
+                time_since_update = cur_time_utc - last_update
+                secs_since_update = time_since_update.total_seconds()
+                punish_amount = round(secs_since_update / PERIOD)
+                punish_val = update_punish_val(punish_val + punish_amount)
+                # last_update = cur_time_utc
+                new_desc = gen_new_desc(desc_no_extras, punish_val)
             toggl.update_timer(cur_timer, new_desc)
 
         elif cur_time_utc > end:
