@@ -90,6 +90,7 @@ class Regex:
     DURATION = r"^\((\d+)\)"
     COUNT = r"\(\s*count:\s*(\d+)\s*\)$"  # the /s at the beginning and end is there, because it might not start at end.
 
+#regexs = {k.lower() : v for k, v in vars(Regex)} //doesn't work, includes extra stuff.
 
 # logging.basicConfig(
 #     filemode="w",
