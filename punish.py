@@ -1,9 +1,9 @@
 """
 Checks toggl track to see if person idle for too long, if so punishes them.
 """
-import toggl_punish_utils.toggl as toggl
 import logging
 import re
+import toggl_punish_utils.toggl as toggl
 
 # import azure.functions as func
 
@@ -56,9 +56,9 @@ def get_last_count():
     entries = toggl.get_entries()
     last_count = 0
     for entry in entries:
-        #logging.info(entry["description"])
+        # logging.info(entry["description"])
         count = re.findall(Regex.COUNT, entry["description"])
-        #logging.info(count)
+        # logging.info(count)
         if count:
             last_count = int(count[0])
             break

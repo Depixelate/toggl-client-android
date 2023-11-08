@@ -1,8 +1,11 @@
+"""
+python convenience functions for interfacing with the habitica api
+"""
 # /* ========================================== */
 # /* [Users] Required script data to fill in    */
 # /* ========================================== */
-import requests
 import logging
+import requests
 import toggl_punish_utils.toggl as toggl
 
 TIMEOUT = 10

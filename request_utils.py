@@ -1,5 +1,7 @@
+"""
+A few constants and functions for handling http requests
+"""
 import logging
-import toggl_punish_utils.toggl as toggl
 import time
 
 TIMEOUT = 10

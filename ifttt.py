@@ -2,8 +2,6 @@
 Function(s) to deal with IFTTT Webhooks
 """
 import logging
-from pprint import pformat
-import time
 import requests
 import toggl_punish_utils.toggl as toggl
 import toggl_punish_utils.request_utils as request_utils
