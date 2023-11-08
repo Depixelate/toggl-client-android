@@ -6,9 +6,9 @@ from datetime import datetime, timezone, timedelta
 import logging
 from pprint import pformat
 import requests
+import toggl_punish_utils.request_utils as request_utils
 
 API_TOKEN = "94210a87e4eda16f53bca10e9421636a"
-TIMEOUT = 10
 
 PUNISH_TIMER_NAME = "PUNISH"
 NOTHING_TIMER_NAME = "Nothing"
@@ -69,7 +69,7 @@ def get_curr_timer():
         "https://api.track.toggl.com/api/v9/me/time_entries/current",
         auth=(API_TOKEN, "api_token"),
         headers={"Content-Type": "application/json"},
-        timeout=TIMEOUT,
+        timeout=request_utils.TIMEOUT,
     )
     logging.info("Response: %s", log_str(cur_timer))
     return cur_timer.json()
@@ -84,7 +84,7 @@ def get_default_workspace_id():
         "https://api.track.toggl.com/api/v9/me",
         auth=(API_TOKEN, "api_token"),
         headers={"content-type": "application/json"},
-        timeout=TIMEOUT,
+        timeout=request_utils.TIMEOUT,
     )
     workspace_id = data.json()["default_workspace_id"]
     logging.info("Response: %s", log_str(data))
@@ -101,10 +101,11 @@ def get_entries():
         "https://api.track.toggl.com/api/v9/me/time_entries",
         auth=(API_TOKEN, "api_token"),
         headers={"content-type": "application/json"},
-        timeout=TIMEOUT,
+        timeout=request_utils.TIMEOUT,
     )
-    logging.info("Response: %s", log_str(data))
-    return data.json()
+    json = data.json()
+    logging.info("Latest entry: %s", json[0])
+    return json
 
 
 def get_last_entry_end():
@@ -165,7 +166,7 @@ def start_timer(
             "end": None,
         },
         headers={"Content-Type": "application/json"},
-        timeout=TIMEOUT,
+        timeout=request_utils.TIMEOUT,
     )
     logging.info("Response: %s", log_str(data))
     return data.json()
@@ -198,7 +199,7 @@ def update_timer(old_timer, new_desc):
         json=new_timer,
         headers={"content-type": "application/json"},
         auth=(API_TOKEN, "api_token"),
-        timeout=TIMEOUT,
+        timeout=request_utils.TIMEOUT,
     )
 
     # data = requests.patch(
