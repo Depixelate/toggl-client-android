@@ -16,8 +16,8 @@ app = func.FunctionApp()
 @app.schedule(
     schedule="0 * * * * *", arg_name="myTimer", run_on_startup=True, use_monitor=False
 )
-#Azure expects this name, so it has to be in camelCase, so we disable the pylint warning.
-def timer_trigger(myTimer: func.TimerRequest) -> None: #pylint: disable=C0103
+# Azure expects this name, so it has to be in camelCase, so we disable the pylint warning.
+def timer_trigger(myTimer: func.TimerRequest) -> None:  # pylint: disable=C0103
     """
     The basic timer trigger function.
     """
@@ -184,12 +184,15 @@ def main():
         new_desc = gen_new_desc(desc_no_extras, punish_val, end)
 
         if desc_no_extras.casefold() == toggl.PUNISH_TIMER_NAME.casefold():
-            if(cur_time.hour >= 0 and cur_time.hour <= 1):
-                count_since_start = int((cur_time_utc-start).total_seconds()/PERIOD)
-                punish_val = update_punish_val(punish_val-count_since_start)
+            if cur_time.hour >= 0 and cur_time.hour <= 1:
+                count_since_start = int((cur_time_utc - start).total_seconds() / PERIOD)
+                count_since_start = min(count_since_start, 120)
+                punish_val = update_punish_val(punish_val - count_since_start)
                 logging.info("Count since start: %d", count_since_start)
                 new_desc = f"(06:00)Sleep(count: {punish_val})"
-                logging.info("Created a sleep toggl timer, new punish val: %d", punish_val)
+                logging.info(
+                    "Created a sleep toggl timer, new punish val: %d", punish_val
+                )
             else:
                 last_update = toggl.from_toggl_format(cur_timer["at"])
                 logging.info("Last time timer updated: %s", last_update)
