@@ -53,7 +53,7 @@ def to_toggl_format(dtime: datetime):
 
 def from_toggl_format(time_str: str) -> datetime:
     """
-    converts a string expressing a datetime in toggl's format to a datetime object
+    converts a string expressing a datetime in toggl's format to a datetime object in utc
     """
     if time_str[-1] == "Z":
         time_str = f"{time_str[:-1]}+00:00"
