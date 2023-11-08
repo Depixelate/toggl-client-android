@@ -7,6 +7,7 @@ python convenience functions for interfacing with the habitica api
 import logging
 import requests
 import toggl_punish_utils.toggl as toggl
+import toggl_punish_utils.request_utils as ru
 
 TIMEOUT = 10
 
@@ -45,23 +46,49 @@ HEADERS = {
 # // - Note that these do not persist in between script calls
 # // - If you want to save values between calls, use PropertiesService
 # // - See https://developers.google.com/apps-script/reference/properties/properties-service
+def get_tasks(task_type=None):
+    """
+    returns the user's dailies
+    """
+    url = (
+        f"https://habitica.com/api/v3/tasks/user?type={task_type}"
+        if task_type
+        else "https://habitica.com/api/v3/tasks/user"
+    )
+    response = requests.get(url=url, headers=HEADERS, timeout=TIMEOUT)
+    logging.info(
+        "result of requesting tasks of type %s: %s", task_type, toggl.log_str(response)
+    )
+    return response.json()
+
+
 def get_dailies():
     """
     returns the user's dailies
     """
-    url = "https://habitica.com/api/v3/tasks/user?type=dailys"
-    response = requests.get(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info("result of requesting dailies: %s", toggl.log_str(response))
-    return response.json()
+    return get_tasks("dailys")
+
 
 def get_user_profile():
     """
     returns the user's profile data
     """
+    # query_string = ""
+    # if fields:
+    #     query_string = f"?{','.join(fields)}"
+
     url = "https://habitica.com/api/v3/user"
     response = requests.get(url=url, headers=HEADERS, timeout=TIMEOUT)
     logging.info("result of requesting user_profile: %s", toggl.log_str(response))
     return response.json()
+
+
+def get_coins():
+    """
+    returns the number of coins the user has.
+    """
+    profile = get_user_profile()
+    return profile["data"]["stats"]["gp"]
 
 
 def create_reward(alias, cost):
@@ -114,6 +141,15 @@ def delete_reward(alias):
     logging.info("delete_reward response: %s", toggl.log_str(response))
     return response
 
+
+def remove_coins(coin_cost):
+    """
+    helper function to remove a certain number of coins
+    """
+    ALIAS = "togglHabiticaPunish"
+    ru.run_request(create_reward, ALIAS, coin_cost)
+    ru.run_request(buy_reward, ALIAS)
+    ru.run_request(delete_reward, ALIAS)
 
 # function doOneTimeSetup() {
 
