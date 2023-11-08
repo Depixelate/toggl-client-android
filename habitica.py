@@ -48,7 +48,7 @@ HEADERS = {
 # // - See https://developers.google.com/apps-script/reference/properties/properties-service
 def get_tasks(task_type=None):
     """
-    returns the user's dailies
+    returns the user's task data
     """
     url = (
         f"https://habitica.com/api/v3/tasks/user?type={task_type}"
