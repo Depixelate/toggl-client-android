@@ -40,10 +40,28 @@ HEADERS = {
     "x-api-key": API_TOKEN,
 }
 
+
 # // [Developers] Add global variables here
 # // - Note that these do not persist in between script calls
 # // - If you want to save values between calls, use PropertiesService
 # // - See https://developers.google.com/apps-script/reference/properties/properties-service
+def get_dailies():
+    """
+    returns the user's dailies
+    """
+    url = "https://habitica.com/api/v3/tasks/user?type=dailys"
+    response = requests.get(url=url, headers=HEADERS, timeout=TIMEOUT)
+    logging.info("result of requesting dailies: %s", toggl.log_str(response))
+    return response.json()
+
+def get_user_profile():
+    """
+    returns the user's profile data
+    """
+    url = "https://habitica.com/api/v3/user"
+    response = requests.get(url=url, headers=HEADERS, timeout=TIMEOUT)
+    logging.info("result of requesting user_profile: %s", toggl.log_str(response))
+    return response.json()
 
 
 def create_reward(alias, cost):
