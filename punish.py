@@ -49,6 +49,35 @@ regex_dict = {"time": Regex.TIME, "duration": Regex.DURATION, "count": Regex.COU
 # LAST_UPDATE_KEY = "last_update"
 # DATA_PATH = f"{PATH_PREFIX}/punish_data.db"
 
+# Porcelein
+
+
+def get_last_count():
+    """
+    Looks at the currently running entries, and based on that, returns the count value of the latest entry.
+    """
+    entries = ru.run_request(toggl.get_entries)
+    last_count = 0
+    for entry in entries:
+        # logging.info(entry["description"])
+        count = re.findall(Regex.COUNT, entry["description"])
+        # logging.info(count)
+        if count:
+            last_count = int(count[0])
+            break
+    return last_count
+
+
+def update_punish_val(new_val):
+    """
+    higher level function to replace current punish val with new one.
+    """
+    cur_timer = ru.run_request(toggl.get_curr_timer)
+    desc_without_count = strip_desc([Regex.COUNT], cur_timer["description"])
+    new_desc = gen_new_desc(desc_without_count, new_val)
+    ru.run_request(toggl.update_timer, cur_timer, new_desc)
+
+# Plumbing
 
 def gen_new_desc(desc_no_extras, punish_val, end=None):
     """
@@ -102,35 +131,6 @@ def remove_extras(regexs, desc):
     as defined by the regexs, and then returns the resulting pure desc.
     """
     return strip_desc(regexs.values(), desc)
-
-
-#HIGH LEVEL FUNCS
-
-
-def get_last_count():
-    """
-    Looks at the currently running entries, and based on that, returns the count value of the latest entry.
-    """
-    entries = ru.run_request(toggl.get_entries())
-    last_count = 0
-    for entry in entries:
-        # logging.info(entry["description"])
-        count = re.findall(Regex.COUNT, entry["description"])
-        # logging.info(count)
-        if count:
-            last_count = int(count[0])
-            break
-    return last_count
-
-
-def update_punish_val(new_val):
-    """
-    higher level function to replace current punish val with new one.
-    """
-    cur_timer = ru.run_request(toggl.get_curr_timer)
-    desc_without_count = strip_desc([Regex.COUNT], cur_timer["description"])
-    new_desc = gen_new_desc(desc_without_count, new_val)
-    ru.run_request(toggl.update_timer, cur_timer, new_desc)
 
 
 # regexs = {k.lower() : v for k, v in vars(Regex)} //doesn't work, includes extra stuff.
