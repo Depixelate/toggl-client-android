@@ -9,7 +9,7 @@ import requests
 import toggl_punish_utils.toggl as toggl
 import toggl_punish_utils.request_utils as ru
 
-TIMEOUT = 10
+TIMEOUT = ru.TIMEOUT
 
 USER_ID = "e544ce9c-d7a4-448c-8b1b-f6b4c4595be1"
 API_TOKEN = "c0b7ac19-9616-4f1a-b0d9-7e9ae9de0465"  # // Do not share this to anyone
@@ -46,6 +46,32 @@ HEADERS = {
 # // - Note that these do not persist in between script calls
 # // - If you want to save values between calls, use PropertiesService
 # // - See https://developers.google.com/apps-script/reference/properties/properties-service
+
+# Porcelein
+
+def remove_coins(coin_cost):
+    """
+    helper function to remove a certain number of coins
+    """
+    ALIAS = "togglHabiticaPunish"
+    ru.run_request(create_reward, ALIAS, coin_cost)
+    ru.run_request(buy_reward, ALIAS)
+    ru.run_request(delete_reward, ALIAS)
+
+
+# Plumbing
+
+
+def sync_stats():
+    """
+    python wrapper around syncing stats
+    """
+    url = "https://habitica.com/api/v3/user/stat-sync"
+    response = requests.post(url=url, headers=HEADERS, timeout=TIMEOUT)
+    logging.info("Response to syncing stats: %s", response)
+    return response
+
+
 def get_tasks(task_type=None):
     """
     returns the user's task data
@@ -69,17 +95,17 @@ def get_dailies():
     return get_tasks("dailys")
 
 
-def get_user_profile():
+def get_user_profile(fields=None):
     """
     returns the user's profile data
     """
-    # query_string = ""
-    # if fields:
-    #     query_string = f"?{','.join(fields)}"
+    query_string = ""
+    if fields:
+        query_string = f"?userFields={','.join(fields)}"
 
-    url = "https://habitica.com/api/v3/user"
+    url = f"https://habitica.com/api/v3/user{query_string}"
     response = requests.get(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info("result of requesting user_profile: %s", toggl.log_str(response))
+    logging.info("result of requesting user_profile with this queryString=%s: %s", query_string, toggl.log_str(response))
     return response.json()
 
 
@@ -87,7 +113,7 @@ def get_coins():
     """
     returns the number of coins the user has.
     """
-    profile = get_user_profile()
+    profile = get_user_profile(["stats.gp"])
     return profile["data"]["stats"]["gp"]
 
 
@@ -141,15 +167,6 @@ def delete_reward(alias):
     logging.info("delete_reward response: %s", toggl.log_str(response))
     return response
 
-
-def remove_coins(coin_cost):
-    """
-    helper function to remove a certain number of coins
-    """
-    ALIAS = "togglHabiticaPunish"
-    ru.run_request(create_reward, ALIAS, coin_cost)
-    ru.run_request(buy_reward, ALIAS)
-    ru.run_request(delete_reward, ALIAS)
 
 # function doOneTimeSetup() {
 
