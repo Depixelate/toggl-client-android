@@ -1,14 +1,16 @@
 """
 Function(s) to deal with IFTTT Webhooks
 """
-import logging
-from pprint import pformat
+
 import time
 import requests
+import toggl
+import logging
 
 IFTTT_KEY = "ebnnyeYuoXIQPVETP3csWrF1FzIwfZH6nQRtYpnu6UH"
 IFTTT_DELAY = 5
 REQUEST_TIMEOUT = 10
+#DELAY = 5
 
 
 def phone_notification():
@@ -23,7 +25,7 @@ def phone_notification():
                 timeout=REQUEST_TIMEOUT,
             )
 
-            logging.info("IFTTT Response: %s", pformat(vars(data)))
+            logging.info("IFTTT Response: %s", toggl.log_str(data))
             break
 
         except Exception as _:  # pylint:disable=W0718
@@ -31,3 +33,4 @@ def phone_notification():
                 "Error While Making IFTTT Request! Trying again in 5 seconds..."
             )
             time.sleep(IFTTT_DELAY)
+

@@ -6,7 +6,7 @@ import re
 from datetime import timedelta
 import azure.functions as func
 import toggl
-import ifttt
+import telegram
 
 # PATH_PREFIX = "" #str(Path.home()) + "/data"
 
@@ -41,8 +41,14 @@ def gen_new_desc(desc_no_extras, punish_val, end=None):
     The timer description should always have the punish count displayed on it.
     This takes the desc. without the punish count, and the punish count,
     and combines them together to give the proper timer description.
+    Since the system only has minute precision, it also rounds the end datetime to the nearest minute
     """
-    end_str = toggl.to_local(end).strftime("(%I:%M)") if end else ""
+    end_str = ""
+    if end:
+        local_end = toggl.to_local(end)
+        minute, second = local_end.minute, local_end.second
+        minute = round(minute + second/60)
+        end_str = local_end.replace(minute=minute, second=second).strftime("(%I:%M)")
     new_desc = f"{end_str}{desc_no_extras}(count: {punish_val})"
     return new_desc
 
@@ -128,11 +134,16 @@ def main():
         desc = cur_timer["description"]
 
         start = toggl.from_toggl_format(cur_timer["start"])
+
+        #end = start + timedelta(minutes=toggl.TASK_DEFAULT_THRESH)
+        end = toggl.get_now_utc()
+        cur_time = toggl.get_now()
         cur_time_utc = toggl.get_now_utc()
+
         logging.info("Now in UTC: %s", cur_time_utc)
 
-        cur_time = toggl.get_now()  # datetime.now().astimezone()
-        end = start + timedelta(minutes=toggl.TASK_DEFAULT_THRESH)
+          # datetime.now().astimezone()
+        
         # tags = cur_timer["tags"]
 
         # for tag in tags:
@@ -183,7 +194,7 @@ def main():
 
         new_desc = gen_new_desc(desc_no_extras, punish_val, end)
 
-        if desc_no_extras.casefold() == toggl.PUNISH_TIMER_NAME.casefold():
+        if desc_no_extras == toggl.PUNISH_TIMER_NAME:
             if cur_time.hour >= 0 and cur_time.hour <= 1:
                 count_since_start = int((cur_time_utc - start).total_seconds() / PERIOD)
                 count_since_start = min(count_since_start, 120)
@@ -204,13 +215,13 @@ def main():
                 new_desc = gen_new_desc(desc_no_extras, punish_val)
             toggl.update_timer(cur_timer, new_desc)
 
-        elif cur_time_utc > end:
+        elif cur_time_utc >= end:
             if is_nothing:
                 extra = (cur_time_utc - end).total_seconds()
                 extra = int(extra / PERIOD)
 
                 punish_val = update_punish_val(
-                    punish_val + toggl.get_now().minute + 1 + extra
+                    punish_val + 30 + extra
                 )
 
                 new_desc = gen_new_desc(toggl.PUNISH_TIMER_NAME, punish_val)
@@ -221,7 +232,7 @@ def main():
                 new_desc = gen_new_desc(
                     toggl.NOTHING_TIMER_NAME, punish_val, end + timedelta(minutes=2)
                 )
-                ifttt.phone_notification()
+                telegram.call()
                 toggl.start_timer(end, new_desc, workspace_id)
         elif desc != new_desc:
             toggl.update_timer(cur_timer, new_desc)
