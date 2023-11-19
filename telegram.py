@@ -408,6 +408,10 @@ class Tgcalls:
 SESSION_STRING = "BQCVO8IAV4dfpOIXaq290sSbBG2cgbsvtxIOd6mbyfX7K6mExhJqUKCU9m8aeRf_BbCB3T7_QOsIpaYPq3dikaWaMkIjqETh-OxcrWbLpYWkQi2Cee8KS_XSjAq-Hgc8z3sJRQUYDu5M490JR8w7SRPeyd9FjJgIOy9OpoCiPVgesyn6Y7caDH9urymACf5ZpS9Fw3dnNGAzAm3GGVEbtguC8YUumidxRdNl-kbqIEkiXCfiGvzwj2cQmHNJLaxNxKTs0X7fNCn9QcE18bN_McHVa__p_cVQEJztx3PrF_-ejW5YdE7cYF7mTcPmWefKamNYFjjQA2irIaZptGcAyDgL-614CgAAAAB0Hi2MAA"
 app = Client("thatha", session_string=SESSION_STRING)
 
+async def _message(msg):
+    async with app:
+        await app.send_message('@sukesshv', msg)
+
 async def _call():
     async with app:
         call = Tgcalls(app)
@@ -420,6 +424,19 @@ import logging
 import time
 
 DELAY = 5
+
+def message(msg):
+    while True:
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            app.run(_message(msg))
+            break
+        except Exception as e:
+            logging.exception("An exception occurred when trying to message self! Continuing in %d seconds...", DELAY)
+            time.sleep(DELAY)
+
+
 def call():
     while True:
         try:

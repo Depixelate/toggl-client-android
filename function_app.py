@@ -47,8 +47,11 @@ def gen_new_desc(desc_no_extras, punish_val, end=None):
     if end:
         local_end = toggl.to_local(end)
         minute, second = local_end.minute, local_end.second
-        minute = round(minute + second/60)
-        end_str = local_end.replace(minute=minute, second=second).strftime("(%I:%M)")
+        new_minute = round(minute + second/60)
+        diff = timedelta(minutes=new_minute-minute)
+        logging.info("In gen_new_desc, end, minute, second: %s, %s, %s", end, minute, second);
+        new_local_end = local_end + diff;
+        end_str = new_local_end.strftime("(%I:%M)")
     new_desc = f"{end_str}{desc_no_extras}(count: {punish_val})"
     return new_desc
 
@@ -159,12 +162,17 @@ def main():
         #         break
 
         results = get_results(regexs, desc)
+        logging.info("Results of parsing: %s", results);
         if results["time"]:
-            hour, minute = [int(field) for field in results["time"][0]]
-            end = cur_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            end = toggl.to_utc(end)
-            while end <= start:
-                end += timedelta(hours=12)
+            try:
+                hour, minute = [int(field) for field in results["time"][0]]
+                end = cur_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                end = toggl.to_utc(end)
+                while end <= start:
+                    end += timedelta(hours=12)
+            except Exception as e:
+                logging.exception("The following exception occurred while parsing end date: ")
+                end = toggl.get_now_utc()
         elif results["duration"]:
             end = start + timedelta(minutes=int(results["duration"][0]))
 
@@ -181,7 +189,11 @@ def main():
 
         punish_val = update_punish_val(int(results["count"][0]))
 
+        logging.info("Final punish val: %d", punish_val);
+
         desc_no_extras = remove_extras(regexs, desc)
+
+        logging.info("Description with no extras: %s", desc_no_extras);
 
         # if not re.search(COUNT_REGEXP, desc):
         #     desc_no_extras = desc
@@ -215,7 +227,7 @@ def main():
                 new_desc = gen_new_desc(desc_no_extras, punish_val)
             toggl.update_timer(cur_timer, new_desc)
 
-        elif cur_time_utc >= end:
+        elif desc_no_extras == "" or desc_no_extras.isspace() or cur_time_utc >= end:
             if is_nothing:
                 extra = (cur_time_utc - end).total_seconds()
                 extra = int(extra / PERIOD)
@@ -229,9 +241,12 @@ def main():
 
                 toggl.start_timer(cur_time_utc, new_desc, workspace_id)
             else:
+                if desc_no_extras == "" or desc_no_extras.isspace():
+                    end = toggl.get_now_utc()
                 new_desc = gen_new_desc(
                     toggl.NOTHING_TIMER_NAME, punish_val, end + timedelta(minutes=2)
                 )
+                telegram.message('Nothing Timer started!')
                 telegram.call()
                 toggl.start_timer(end, new_desc, workspace_id)
         elif desc != new_desc:
@@ -247,13 +262,13 @@ def main():
         logging.exception("Ran into the following error: ")
 
 
-# logging.basicConfig(
-#     filemode="w",
-#     filename="toggl_punish.log",
-#     format="%(asctime)s %(levelname)s:%(message)s",
-#     level=logging.INFO,
-# )
-# logging.info("=================NEW RUN=====================")
+logging.basicConfig(
+    filemode="w",
+    filename="toggl_punish.log",
+    format="%(asctime)s %(levelname)s:%(message)s",
+    level=logging.INFO,
+)
+logging.info("=================NEW RUN=====================")
 # my_scheduler = sched.scheduler(time.time, time.sleep)
 # start_time = time.time()
 # my_scheduler.enterabs(start_time, 1, main, (my_scheduler, start_time))

@@ -103,7 +103,7 @@ def get_entries():
         headers={"content-type": "application/json"},
         timeout=TIMEOUT,
     )
-    logging.info("Response: %s", log_str(data))
+    logging.info("Response: %s", data.json()[0])
     return data.json()
 
 

@@ -1,5 +1,13 @@
 # Test files
 test.py
+# Other files
+/.vscode/
+/%USERPROFILE%/
+
+
+#pyenv
+*pyenv*
+
 # Telegram session files
 *.session
 # Byte-compiled / optimized / DLL files
@@ -136,4 +144,5 @@ local.settings.json
 __blobstorage__
 __queuestorage__
 __azurite_db*__.json
+__azurite*.json
 .python_packages
