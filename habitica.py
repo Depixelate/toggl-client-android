@@ -49,6 +49,7 @@ HEADERS = {
 
 # Porcelein
 
+
 def remove_coins(coin_cost):
     """
     helper function to remove a certain number of coins
@@ -61,6 +62,7 @@ def remove_coins(coin_cost):
 
 # Plumbing
 
+
 def run_cron():
     """
     Runs the Habitica cron
@@ -69,6 +71,7 @@ def run_cron():
     response = requests.post(url=url, headers=HEADERS, timeout=TIMEOUT)
     logging.info("Response to cron: %s", toggl.log_str(response))
     return response
+
 
 def sync_stats():
     """
@@ -103,6 +106,22 @@ def get_dailies():
     return get_tasks("dailys")
 
 
+def set_task_text(task_id, new_text):
+    """
+    sets the text of the task with the given id to 'new_text'
+    """
+    url = f"https://habitica.com/api/v3/tasks/{task_id}"
+    payload = {"text": new_text}
+    response = requests.put(url=url, json=payload, headers=HEADERS, timeout=TIMEOUT)
+    logging.info(
+        "result of setting text of task with id %s to %s: %s",
+        task_id,
+        new_text,
+        toggl.log_str(response),
+    )
+    return response
+
+
 def get_user_profile(fields=None):
     """
     returns the user's profile data
@@ -113,16 +132,22 @@ def get_user_profile(fields=None):
 
     url = f"https://habitica.com/api/v3/user{query_string}"
     response = requests.get(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info("result of requesting user_profile with this queryString=%s: %s", query_string, toggl.log_str(response))
+    logging.info(
+        "result of requesting user_profile with this queryString=%s: %s",
+        query_string,
+        toggl.log_str(response),
+    )
     return response.json()
+
 
 def get_cron_history():
     """
     returns the previous crons that have been run
     """
-    
+
     profile = get_user_profile(["history.exp"])
     return profile["data"]["history"]["exp"]
+
 
 def get_coins():
     """
