@@ -61,6 +61,14 @@ def remove_coins(coin_cost):
 
 # Plumbing
 
+def run_cron():
+    """
+    Runs the Habitica cron
+    """
+    url = "https://habitica.com/api/v3/cron"
+    response = requests.post(url=url, headers=HEADERS, timeout=TIMEOUT)
+    logging.info("Response to cron: %s", toggl.log_str(response))
+    return response
 
 def sync_stats():
     """
@@ -68,7 +76,7 @@ def sync_stats():
     """
     url = "https://habitica.com/api/v3/user/stat-sync"
     response = requests.post(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info("Response to syncing stats: %s", response)
+    logging.info("Response to syncing stats: %s", toggl.log_str(response))
     return response
 
 
@@ -108,6 +116,13 @@ def get_user_profile(fields=None):
     logging.info("result of requesting user_profile with this queryString=%s: %s", query_string, toggl.log_str(response))
     return response.json()
 
+def get_cron_history():
+    """
+    returns the previous crons that have been run
+    """
+    
+    profile = get_user_profile(["history.exp"])
+    return profile["data"]["history"]["exp"]
 
 def get_coins():
     """
