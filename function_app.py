@@ -8,14 +8,16 @@ import azure.functions as func
 import toggl
 import telegram
 
+
 # PATH_PREFIX = "" #str(Path.home()) + "/data"
 
 app = func.FunctionApp()
 
 
 @app.schedule(
-    schedule="0 * * * * *", arg_name="myTimer", run_on_startup=True, use_monitor=False
+    schedule="0 * * * * *", arg_name="myTimer", run_on_startup=False, use_monitor=True
 )
+
 # Azure expects this name, so it has to be in camelCase, so we disable the pylint warning.
 def timer_trigger(myTimer: func.TimerRequest) -> None:  # pylint: disable=C0103
     """
@@ -137,7 +139,7 @@ def main():
         desc = cur_timer["description"]
 
         start = toggl.from_toggl_format(cur_timer["start"])
-
+        local_start = toggl.to_local(start)
         #end = start + timedelta(minutes=toggl.TASK_DEFAULT_THRESH)
         end = toggl.get_now_utc()
         cur_time = toggl.get_now()
@@ -227,7 +229,7 @@ def main():
                 new_desc = gen_new_desc(desc_no_extras, punish_val)
             toggl.update_timer(cur_timer, new_desc)
 
-        elif desc_no_extras == "" or desc_no_extras.isspace() or cur_time_utc >= end:
+        elif desc_no_extras == "" or desc_no_extras.isspace() or cur_time_utc >= end or (end - start >= timedelta(hours=5) and local_start.hour > 3 and local_start.hour < 21):
             if is_nothing:
                 extra = (cur_time_utc - end).total_seconds()
                 extra = int(extra / PERIOD)
@@ -241,7 +243,8 @@ def main():
 
                 toggl.start_timer(cur_time_utc, new_desc, workspace_id)
             else:
-                if desc_no_extras == "" or desc_no_extras.isspace():
+                # if desc_no_extras == "" or desc_no_extras.isspace():
+                if not cur_time_utc >= end:
                     end = toggl.get_now_utc()
                 new_desc = gen_new_desc(
                     toggl.NOTHING_TIMER_NAME, punish_val, end + timedelta(minutes=2)
