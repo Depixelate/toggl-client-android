@@ -172,10 +172,12 @@ def start_timer(
     return data.json()
 
 
-def update_timer(old_timer, new_desc):
+def update_timer(old_timer, new_desc, new_tags = None):
     """
     Updates the currently running timer on Toggl with a new description.
     """
+    if new_tags is None:
+        new_tags = []
     logging.info(
         "Updating Timer: new_desc = %s, old_timer = %s", new_desc, log_str(old_timer)
     )
@@ -191,8 +193,10 @@ def update_timer(old_timer, new_desc):
         "duration": duration,
         "start": to_toggl_format(start),
         "workspace_id": workspace_id,
+        "tags": new_tags,
         "created_with": "requests",
         "project_id": old_timer["project_id"],
+
     }
     data = requests.put(
         f"https://api.track.toggl.com/api/v9/workspaces/{workspace_id}/time_entries/{timer_id}",

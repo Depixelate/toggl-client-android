@@ -68,14 +68,16 @@ def get_last_count():
     return last_count
 
 
-def update_punish_val(new_val):
+def update_punish_val(new_val, tags = None):
     """
     higher level function to replace current punish val with new one.
     """
+    if tags is None:
+        tags = []
     cur_timer = ru.run_request(toggl.get_curr_timer)
     desc_without_count = strip_desc([Regex.COUNT], cur_timer["description"])
     new_desc = gen_new_desc(desc_without_count, new_val)
-    ru.run_request(toggl.update_timer, cur_timer, new_desc)
+    ru.run_request(toggl.update_timer, cur_timer, new_desc, tags)
 
 # Plumbing
 
