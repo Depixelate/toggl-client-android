@@ -102,9 +102,9 @@ def main():
     # TIME_REGEX = r"(\d{1,2}):(\d{2})"
 
     regexs = {}
-    regexs["time"] = r"^\((\d{1,2}):(\d{1,2})\)"
-    regexs["duration"] = r"^\((\d+)\)"
-    regexs["count"] = r"\(\s*count:\s*(\d+)\s*\)$"
+    regexs["time"] = r"\((\d{1,2}):(\d{1,2})\)"
+    regexs["duration"] = r"\((\d+)\)"
+    regexs["count"] = r"\(\s*count:\s*(\d+)\s*\)"
 
     logging.info("Entered Main V3")
 
@@ -209,12 +209,12 @@ def main():
         new_desc = gen_new_desc(desc_no_extras, punish_val, end)
 
         if desc_no_extras == toggl.PUNISH_TIMER_NAME:
-            if cur_time.hour >= 0 and cur_time.hour <= 1:
+            if cur_time.hour >= 0 and cur_time.minute >= 30 and cur_time.hour <= 1:
                 count_since_start = int((cur_time_utc - start).total_seconds() / PERIOD)
                 count_since_start = min(count_since_start, 120)
                 punish_val = update_punish_val(punish_val - count_since_start)
                 logging.info("Count since start: %d", count_since_start)
-                new_desc = f"(06:00)Sleep(count: {punish_val})"
+                new_desc = f"(06:00)Sleep(count: {punish_val})last update: {cur_time.hour}{cur_time.minute}"
                 logging.info(
                     "Created a sleep toggl timer, new punish val: %d", punish_val
                 )
@@ -229,16 +229,17 @@ def main():
                 new_desc = gen_new_desc(desc_no_extras, punish_val)
             toggl.update_timer(cur_timer, new_desc)
 
-        elif desc_no_extras == "" or desc_no_extras.isspace() or cur_time_utc >= end or (end - start >= timedelta(hours=5) and local_start.hour > 3 and local_start.hour < 21):
+        elif (cur_time.hour >= 22 and cur_time.minute >= 30 and "sleep" not in desc_no_extras.casefold()) or desc_no_extras == "" or desc_no_extras.isspace() or cur_time_utc >= end or (end - start >= timedelta(hours=5) and local_start.hour > 3 and local_start.hour < 21):
             if is_nothing:
                 extra = (cur_time_utc - end).total_seconds()
                 extra = int(extra / PERIOD)
 
                 punish_val = update_punish_val(
-                    punish_val + 30 + extra
+                    punish_val + cur_time.minute + extra
                 )
 
                 new_desc = gen_new_desc(toggl.PUNISH_TIMER_NAME, punish_val)
+                new_desc += f"last update: {cur_time.hour}:{cur_time.minute}"
                 # last_update = cur_time_utc
 
                 toggl.start_timer(cur_time_utc, new_desc, workspace_id)
@@ -249,6 +250,7 @@ def main():
                 new_desc = gen_new_desc(
                     toggl.NOTHING_TIMER_NAME, punish_val, end + timedelta(minutes=2)
                 )
+                new_desc += f"last update: {cur_time.hour}:{cur_time.minute}"
                 telegram.message('Nothing Timer started!')
                 telegram.call()
                 toggl.start_timer(end, new_desc, workspace_id)
