@@ -135,13 +135,17 @@ def calc_duration(start: datetime):
 
 
 def start_timer(
-    start: datetime, desc: str, workspace_id: int, tags: list[str] = ("waste",)
+    start: datetime, desc: str, workspace_id: int, tags: list[str] = None, old_timer_tags = None
 ):
     """
     starts a running timer with the given start date and description in the
     given workspace with the given tags by calling toggl's api
     """
-    tags = list(tags)
+    if tags is None:
+        tags = ["waste"]
+    if old_timer_tags is None:
+        old_timer_tags = []
+    tags = list(tags + old_timer_tags)
     logging.info(
         "Starting New Timer: start=%s, desc=%s, workspace_id=%s, tags=%s",
         start,
@@ -171,10 +175,13 @@ def start_timer(
     return data.json()
 
 
-def update_timer(old_timer, new_desc):
+def update_timer(old_timer, new_desc, extra_tags = None):
     """
     Updates the currently running timer on Toggl with a new description.
     """
+    if extra_tags is None:
+        extra_tags = []
+    tags = old_timer["tags"] + extra_tags
     logging.info(
         "Updating Timer: new_desc = %s, old_timer = %s", new_desc, log_str(old_timer)
     )
@@ -188,6 +195,7 @@ def update_timer(old_timer, new_desc):
         "billable": old_timer["billable"],
         "description": new_desc,
         "duration": duration,
+        "tags": tags,
         "start": to_toggl_format(start),
         "workspace_id": workspace_id,
         "created_with": "requests",
