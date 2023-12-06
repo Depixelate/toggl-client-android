@@ -38,14 +38,17 @@ COUNT_KEY = "punish_val"
 # DATA_PATH = f"{PATH_PREFIX}/punish_data.db"
 
 
-def gen_new_desc(desc_no_extras, punish_val, end=None):
+def gen_new_desc(desc_no_extras, punish_val = None, end=None):
     """
     The timer description should always have the punish count displayed on it.
     This takes the desc. without the punish count, and the punish count,
     and combines them together to give the proper timer description.
     Since the system only has minute precision, it also rounds the end datetime to the nearest minute
     """
+    punish_str = ""
     end_str = ""
+    if punish_val:
+        punish_str = f"(count: {punish_val})"
     if end:
         local_end = toggl.to_local(end)
         minute, second = local_end.minute, local_end.second
@@ -54,7 +57,7 @@ def gen_new_desc(desc_no_extras, punish_val, end=None):
         logging.info("In gen_new_desc, end, minute, second: %s, %s, %s", end, minute, second)
         new_local_end = local_end + diff
         end_str = new_local_end.strftime("(%I:%M)")
-    new_desc = f"{end_str}{desc_no_extras}(count: {punish_val})"
+    new_desc = f"{end_str}{desc_no_extras}{punish_str}"
     return new_desc
 
 
@@ -91,6 +94,20 @@ def remove_extras(regexs, desc):
         desc = re.sub(regex, "", desc)
 
     return desc
+
+def start_nothing_timer(workspace_id, start, punish_val = None, tags = None):
+    """
+    Starts "Nothing" Timer with the given punish val, tags, etc.
+    """
+    if(tags is None):
+        tags = []
+    new_desc = gen_new_desc(
+        toggl.NOTHING_TIMER_NAME, punish_val, start + timedelta(minutes=2)
+    )
+    tags += last_update_tags(punish_val) # tells you the min as well, telling you extra sits
+    telegram.message('Nothing Timer started!')
+    telegram.call()
+    toggl.start_timer(start, new_desc, workspace_id, tags)
 
 def last_update_tags(punish_val):
     """
@@ -137,9 +154,11 @@ def main():
         # logging.info("Initial last_update = %s", last_update)
 
         if cur_timer is None:
-            desc = toggl.NOTHING_TIMER_NAME
-            start = toggl.get_last_entry_end()
-            toggl.start_timer(start, desc, workspace_id)
+            last_entry = toggl.get_last_entry()
+            start = toggl.get_end_from_last_entry(last_entry)
+            tags = last_entry["tags"]
+            start_nothing_timer(workspace_id, start, None, tags)
+            #toggl.start_timer(start, desc, workspace_id)
             cur_timer = toggl.get_curr_timer()
 
         desc = cur_timer["description"]
@@ -255,13 +274,14 @@ def main():
                 # if desc_no_extras == "" or desc_no_extras.isspace():
                 if not cur_time_utc >= end:
                     end = toggl.get_now_utc()
-                new_desc = gen_new_desc(
-                    toggl.NOTHING_TIMER_NAME, punish_val, end + timedelta(minutes=2)
-                )
-                tags = last_update_tags(punish_val) # tells you the min as well, telling you extra sits
-                telegram.message('Nothing Timer started!')
-                telegram.call()
-                toggl.start_timer(end, new_desc, workspace_id, tags, cur_timer["tags"])
+                start_nothing_timer(workspace_id, end, punish_val, cur_timer["tags"])
+                # new_desc = gen_new_desc(
+                #     toggl.NOTHING_TIMER_NAME, punish_val, end + timedelta(minutes=2)
+                # )
+                #  # tells you the min as well, telling you extra sits
+                # telegram.message('Nothing Timer started!')
+                # telegram.call()
+                # toggl.start_timer(end, new_desc, workspace_id, tags, cur_timer["tags"])
         elif desc != new_desc:
             toggl.update_timer(cur_timer, new_desc)
 

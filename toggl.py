@@ -106,18 +106,38 @@ def get_entries():
     logging.info("Response: %s", data.json()[0])
     return data.json()
 
-
-def get_last_entry_end():
+def get_last_entry():
     """
-    Gets the list of entries from toggl api, then  get the last entry's end.
+    Get's the list of entries, then returns the last entry
     """
     entries = get_entries()
     if entries is not None and len(entries) > 0:
         for entry in entries:
             if entry["duration"] > 0:  # Invalid entries will have duration 0,
-                start = entry["stop"]  # running will have value < 0
-                start = from_toggl_format(start)
-                return start
+                return entry
+                
+
+    return None
+
+def get_end_from_last_entry(last_entry):
+    """
+    takes the last entry as parameter, either return's its end as datetime, or returns None if entry None
+    """
+    return get_now_utc() if last_entry is None else from_toggl_format(last_entry["stop"])
+
+def get_last_entry_end():
+    """
+    Gets the list of entries from toggl api, then  get the last entry's end.
+    """
+    return get_end_from_last_entry(get_last_entry())
+    
+    # entries = get_entries()
+    # if entries is not None and len(entries) > 0:
+    #     for entry in entries:
+    #         if entry["duration"] > 0:  # Invalid entries will have duration 0,
+    #             start = entry["stop"]  # running will have value < 0
+    #             start = from_toggl_format(start)
+    #             return start
 
     return get_now_utc()
 
