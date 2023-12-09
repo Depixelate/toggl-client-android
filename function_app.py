@@ -47,9 +47,9 @@ def gen_new_desc(desc_no_extras, punish_val = None, end=None):
     """
     punish_str = ""
     end_str = ""
-    if punish_val:
+    if punish_val is not None:
         punish_str = f"(count: {punish_val})"
-    if end:
+    if end is not None:
         local_end = toggl.to_local(end)
         minute, second = local_end.minute, local_end.second
         new_minute = round(minute + second/60)
