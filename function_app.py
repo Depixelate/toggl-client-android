@@ -3,6 +3,7 @@ Checks toggl track to see if person idle for too long, if so punishes them.
 """
 import logging
 import re
+from time import sleep
 from datetime import time, timedelta
 import azure.functions as func
 import toggl
@@ -147,12 +148,18 @@ def main():
         # )
 
         workspace_id = toggl.get_default_workspace_id()
-        cur_timer = toggl.get_curr_timer()
-        workspace_id = workspace_id if workspace_id else cur_timer["workspace_id"]
+        
+        
 
         logging.info("Initial punish_val = %s", punish_val)
         # logging.info("Initial last_update = %s", last_update)
 
+        cur_timer = toggl.get_curr_timer()
+
+        if cur_timer is None:
+            sleep(30)
+            cur_timer = toggl.get_curr_timer()
+        
         if cur_timer is None:
             last_entry = toggl.get_last_entry()
             start = toggl.get_end_from_last_entry(last_entry)
@@ -160,6 +167,8 @@ def main():
             start_nothing_timer(workspace_id, start, None, tags)
             #toggl.start_timer(start, desc, workspace_id)
             cur_timer = toggl.get_curr_timer()
+        
+        workspace_id = workspace_id if workspace_id else cur_timer["workspace_id"]
 
         desc = cur_timer["description"]
 
