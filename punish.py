@@ -40,8 +40,8 @@ class Regex:
     Regular Expression Constants.
     """
 
-    TIME = r"\((\d{1,2}):(\d{1,2})\)"
-    DURATION = r"\((\d+)\)"
+    TIME = r"\((s?\d{1,2}):(\d{1,2})\)"
+    DURATION = r"\((s?\d+)\)"
     COUNT = r"\(\s*count:\s*(\d+)\s*\)"
     # TIME = r"^\((\d{1,2}):(\d{1,2})\)"
     # DURATION = r"^\((\d+)\)"
@@ -86,7 +86,7 @@ def update_punish_val(new_val, tags = None):
 
 # Plumbing
 
-def gen_new_desc(desc_no_extras, punish_val = None, end=None):
+def gen_new_desc(desc_no_extras, punish_val = None, end=None, is_timed_task = False):
     """
     The timer description should always have the punish count displayed on it.
     This takes the desc. without the punish count, and the punish count,
@@ -104,7 +104,7 @@ def gen_new_desc(desc_no_extras, punish_val = None, end=None):
         diff = timedelta(minutes=new_minute-minute)
         logging.info("In gen_new_desc, end, minute, second: %s, %s, %s", end, minute, second)
         new_local_end = local_end + diff
-        end_str = new_local_end.strftime("(%I:%M)")
+        end_str = new_local_end.strftime("(s%I:%M)") if is_timed_task else new_local_end.strftime("(%I:%M)")
     new_desc = f"{end_str}{desc_no_extras}{punish_str}"
     return new_desc
 
@@ -151,18 +151,19 @@ def remove_extras(regexs, desc):
     """
     return strip_desc(regexs.values(), desc)
 
-def start_nothing_timer(workspace_id, start, punish_val = None, tags = None):
+def start_nothing_timer(workspace_id, start, punish_val = None, tags = None, is_timed_task = False):
     """
     Starts "Nothing" Timer with the given punish val, tags, etc.
     """
     if(tags is None):
         tags = []
     new_desc = gen_new_desc(
-        toggl.NOTHING_TIMER_NAME, punish_val, start + timedelta(minutes=2)
+        toggl.NOTHING_TIMER_NAME, punish_val, start + timedelta(minutes=2), is_timed_task
     )
     tags += last_update_tags(punish_val) # tells you the min as well, telling you extra sits
-    telegram.message('Nothing Timer started!')
-    telegram.call()
+    if not is_timed_task:
+        telegram.message('Nothing Timer started!')
+        telegram.call()
     toggl.start_timer(start, new_desc, workspace_id, tags)
 
 def last_update_tags(punish_val):
