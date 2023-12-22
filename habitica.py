@@ -148,6 +148,13 @@ def get_cron_history():
     profile = get_user_profile(["history.exp"])
     return profile["data"]["history"]["exp"]
 
+def is_player_in_inn():
+    """
+    returns whether the user is in the inn or not
+    """
+    profile = get_user_profile(["preferences.sleep"])
+    return profile["data"]["preferences"]["sleep"]
+
 
 def get_coins():
     """
@@ -156,6 +163,14 @@ def get_coins():
     profile = get_user_profile(["stats.gp"])
     return profile["data"]["stats"]["gp"]
 
+def toggle_player_in_inn():
+    """
+    toggles player in inn mode
+    """
+    url = "https://habitica.com/api/v3/user/sleep"
+    response = requests.post(url=url, headers=HEADERS, timeout=TIMEOUT)
+    logging.info("Response to toggling sleep: %s", toggl.log_str(response))
+    return response
 
 def create_reward(alias, cost):
     """
