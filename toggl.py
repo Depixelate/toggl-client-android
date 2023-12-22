@@ -71,7 +71,8 @@ def get_curr_timer():
         headers={"Content-Type": "application/json"},
         timeout=request_utils.TIMEOUT,
     )
-    logging.info("Response: %s", log_str(cur_timer))
+    cur_timer.raise_for_status()
+    logging.debug("Response: %s", log_str(cur_timer))
     return cur_timer.json()
 
 
@@ -86,8 +87,9 @@ def get_default_workspace_id():
         headers={"content-type": "application/json"},
         timeout=request_utils.TIMEOUT,
     )
+    data.raise_for_status()
     workspace_id = data.json()["default_workspace_id"]
-    logging.info("Response: %s", log_str(data))
+    logging.debug("Response: %s", log_str(data))
     return workspace_id
 
 
@@ -103,8 +105,10 @@ def get_entries():
         headers={"content-type": "application/json"},
         timeout=request_utils.TIMEOUT,
     )
+    data.raise_for_status()
     json = data.json()
     logging.info("Latest entry: %s", json[0])
+    logging.debug("Response: %s", data)
     return json
 
 
@@ -168,7 +172,8 @@ def start_timer(
         headers={"Content-Type": "application/json"},
         timeout=request_utils.TIMEOUT,
     )
-    logging.info("Response: %s", log_str(data))
+    data.raise_for_status()
+    logging.debug("Response: %s", log_str(data))
     return data.json()
 
 
@@ -205,6 +210,7 @@ def update_timer(old_timer, new_desc, new_tags = None):
         auth=(API_TOKEN, "api_token"),
         timeout=request_utils.TIMEOUT,
     )
+    data.raise_for_status()
 
     # data = requests.patch(
     # f'https://api.track.toggl.com/api/v9/workspaces/{workspace_id}/time_entries/{timer_id}',
@@ -213,7 +219,7 @@ def update_timer(old_timer, new_desc, new_tags = None):
     # auth = (API_TOKEN, 'api_token')
     # )
 
-    logging.info("Response: %s", log_str(data))
+    logging.debug("Response: %s", log_str(data))
     return data.json()
 
 

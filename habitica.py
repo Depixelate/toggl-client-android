@@ -69,7 +69,8 @@ def run_cron():
     """
     url = "https://habitica.com/api/v3/cron"
     response = requests.post(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info("Response to cron: %s", toggl.log_str(response))
+    response.raise_for_status()
+    logging.debug("Response to cron: %s", toggl.log_str(response))
     return response
 
 
@@ -79,7 +80,8 @@ def sync_stats():
     """
     url = "https://habitica.com/api/v3/user/stat-sync"
     response = requests.post(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info("Response to syncing stats: %s", toggl.log_str(response))
+    response.raise_for_status()
+    logging.debug("Response to syncing stats: %s", toggl.log_str(response))
     return response
 
 
@@ -93,7 +95,8 @@ def get_tasks(task_type=None):
         else "https://habitica.com/api/v3/tasks/user"
     )
     response = requests.get(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info(
+    response.raise_for_status()
+    logging.debug(
         "result of requesting tasks of type %s: %s", task_type, toggl.log_str(response)
     )
     return response.json()
@@ -113,7 +116,8 @@ def set_task_text(task_id, new_text):
     url = f"https://habitica.com/api/v3/tasks/{task_id}"
     payload = {"text": new_text}
     response = requests.put(url=url, json=payload, headers=HEADERS, timeout=TIMEOUT)
-    logging.info(
+    response.raise_for_status()
+    logging.debug(
         "result of setting text of task with id %s to %s: %s",
         task_id,
         new_text,
@@ -132,7 +136,8 @@ def get_user_profile(fields=None):
 
     url = f"https://habitica.com/api/v3/user{query_string}"
     response = requests.get(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info(
+    response.raise_for_status()
+    logging.debug(
         "result of requesting user_profile with this queryString=%s: %s",
         query_string,
         toggl.log_str(response),
@@ -152,7 +157,7 @@ def is_player_in_inn():
     """
     returns whether the user is in the inn or not
     """
-    profile = get_user_profile(["preferences.sleep"])
+    profile = get_user_profile(["preferences"])
     return profile["data"]["preferences"]["sleep"]
 
 
@@ -169,7 +174,8 @@ def toggle_player_in_inn():
     """
     url = "https://habitica.com/api/v3/user/sleep"
     response = requests.post(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info("Response to toggling sleep: %s", toggl.log_str(response))
+    response.raise_for_status()
+    logging.debug("Response to toggling sleep: %s", toggl.log_str(response))
     return response
 
 def create_reward(alias, cost):
@@ -188,8 +194,9 @@ def create_reward(alias, cost):
     # }
     url = "https://habitica.com/api/v3/tasks/user"
     response = requests.post(url=url, headers=HEADERS, json=payload, timeout=TIMEOUT)
+    response.raise_for_status()
     # response = UrlFetchApp.fetch(url, params)
-    logging.info("create_reward response: %s", toggl.log_str(response))
+    logging.debug("create_reward response: %s", toggl.log_str(response))
     return response
 
 
@@ -204,7 +211,8 @@ def buy_reward(alias):
     # };
     url = "https://habitica.com/api/v3/tasks/" + alias + "/score/down"
     response = requests.post(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info("buy_reward response: %s", toggl.log_str(response))
+    response.raise_for_status()
+    logging.debug("buy_reward response: %s", toggl.log_str(response))
     return response
 
 
@@ -219,7 +227,8 @@ def delete_reward(alias):
     # };
     url = "https://habitica.com/api/v3/tasks/" + alias
     response = requests.delete(url=url, headers=HEADERS, timeout=TIMEOUT)
-    logging.info("delete_reward response: %s", toggl.log_str(response))
+    response.raise_for_status()
+    logging.debug("delete_reward response: %s", toggl.log_str(response))
     return response
 
 

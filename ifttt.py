@@ -42,8 +42,9 @@ def _phone_notification():
         f"https://maker.ifttt.com/trigger/pomo_done/with/key/{IFTTT_KEY}",
         timeout=request_utils.TIMEOUT,
     )
+    data.raise_for_status()
 
-    logging.info("IFTTT Response: %s", toggl.log_str(data))
+    logging.debug("IFTTT Response: %s", toggl.log_str(data))
     return data
 
 def phone_notification():
