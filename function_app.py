@@ -122,6 +122,9 @@ def main():
     The main function.
     """
 
+    
+
+
     # NUM_REGEX = r"\d+"
     # TIME_REGEX = r"(\d{1,2}):(\d{2})"
 
@@ -177,7 +180,7 @@ def main():
         #end = start + timedelta(minutes=toggl.TASK_DEFAULT_THRESH)
         end = toggl.get_now_utc()
         cur_time = toggl.get_now()
-        cur_time_utc = toggl.get_now_utc()
+        cur_time_utc = toggl.get_now_utc() # it is important that cur_time_utc is just after end, in the case where no time is given in the description so cur_time_utc > end
 
         logging.info("Now in UTC: %s", cur_time_utc)
 
