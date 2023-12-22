@@ -6,8 +6,10 @@ import re
 from time import sleep
 from datetime import time, timedelta
 import azure.functions as func
-import toggl
-import telegram
+import toggl_punish_utils.telegram as telegram
+import toggl_punish_utils.habitica as habitica
+import toggl_punish_utils.toggl as toggl
+import toggl_punish_utils.punish as punish
 
 
 # PATH_PREFIX = "" #str(Path.home()) + "/data"
@@ -24,6 +26,10 @@ def timer_trigger(myTimer: func.TimerRequest) -> None:  # pylint: disable=C0103
     """
     The basic timer trigger function.
     """
+    if habitica.is_player_in_inn():
+        logging.info("Player is in inn, so not running.")
+        return
+    
     if myTimer.past_due:
         logging.info("The timer is past due!")
 
@@ -32,106 +38,106 @@ def timer_trigger(myTimer: func.TimerRequest) -> None:  # pylint: disable=C0103
     #!/usr/bin/python3
 
 
-PERIOD = 60
+# PERIOD = 60
 
-COUNT_KEY = "punish_val"
-# LAST_UPDATE_KEY = "last_update"
-# DATA_PATH = f"{PATH_PREFIX}/punish_data.db"
-
-
-def gen_new_desc(desc_no_extras, punish_val = None, end=None):
-    """
-    The timer description should always have the punish count displayed on it.
-    This takes the desc. without the punish count, and the punish count,
-    and combines them together to give the proper timer description.
-    Since the system only has minute precision, it also rounds the end datetime to the nearest minute
-    """
-    punish_str = ""
-    end_str = ""
-    if punish_val is not None:
-        punish_str = f"(count: {punish_val})"
-    if end is not None:
-        local_end = toggl.to_local(end)
-        minute, second = local_end.minute, local_end.second
-        new_minute = round(minute + second/60)
-        diff = timedelta(minutes=new_minute-minute)
-        logging.info("In gen_new_desc, end, minute, second: %s, %s, %s", end, minute, second)
-        new_local_end = local_end + diff
-        end_str = new_local_end.strftime("(%I:%M)")
-    new_desc = f"{end_str}{desc_no_extras}{punish_str}"
-    return new_desc
+# # COUNT_KEY = "punish_val"
+# # LAST_UPDATE_KEY = "last_update"
+# # DATA_PATH = f"{PATH_PREFIX}/punish_data.db"
 
 
-def update_punish_val(new_val):
-    """
-    takes the new value that the program wants to assign to punish_val,
-    and then adjusts it so that it lies within proper bounds.
-    """
-    if new_val < 0:
-        new_val = 0
-        logging.warning("punish_val was found to be negative, resetting to 0.")
-    elif new_val > 5000:
-        new_val = 0
-        logging.warning("punish_val was found to be > 5000, resetting to 0.")
+# def gen_new_desc(desc_no_extras, punish_val = None, end=None):
+#     """
+#     The timer description should always have the punish count displayed on it.
+#     This takes the desc. without the punish count, and the punish count,
+#     and combines them together to give the proper timer description.
+#     Since the system only has minute precision, it also rounds the end datetime to the nearest minute
+#     """
+#     punish_str = ""
+#     end_str = ""
+#     if punish_val is not None:
+#         punish_str = f"(count: {punish_val})"
+#     if end is not None:
+#         local_end = toggl.to_local(end)
+#         minute, second = local_end.minute, local_end.second
+#         new_minute = round(minute + second/60)
+#         diff = timedelta(minutes=new_minute-minute)
+#         logging.info("In gen_new_desc, end, minute, second: %s, %s, %s", end, minute, second)
+#         new_local_end = local_end + diff
+#         end_str = new_local_end.strftime("(%I:%M)")
+#     new_desc = f"{end_str}{desc_no_extras}{punish_str}"
+#     return new_desc
 
-    return new_val
+
+# def update_punish_val(new_val):
+#     """
+#     takes the new value that the program wants to assign to punish_val,
+#     and then adjusts it so that it lies within proper bounds.
+#     """
+#     if new_val < 0:
+#         new_val = 0
+#         logging.warning("punish_val was found to be negative, resetting to 0.")
+#     elif new_val > 5000:
+#         new_val = 0
+#         logging.warning("punish_val was found to be > 5000, resetting to 0.")
+
+#     return new_val
 
 
-def get_results(regexs, desc):
-    """
-    Takes the description of the timer, and then runs the attribute regexs
-    to extract information, like the punish count.
-    """
-    results = {name: re.findall(regex, desc) for name, regex in regexs.items()}
-    return results
+# def get_results(regexs, desc):
+#     """
+#     Takes the description of the timer, and then runs the attribute regexs
+#     to extract information, like the punish count.
+#     """
+#     results = {name: re.findall(regex, desc) for name, regex in regexs.items()}
+#     return results
 
 
-def remove_extras(regexs, desc):
-    """
-    This removes all the extras/attributes in the timer description
-    as defined by the regexs, and then returns the resulting pure desc.
-    """
-    for regex in regexs.values():
-        desc = re.sub(regex, "", desc)
+# def remove_extras(regexs, desc):
+#     """
+#     This removes all the extras/attributes in the timer description
+#     as defined by the regexs, and then returns the resulting pure desc.
+#     """
+#     for regex in regexs.values():
+#         desc = re.sub(regex, "", desc)
 
-    return desc
+#     return desc
 
-def start_nothing_timer(workspace_id, start, punish_val = None, tags = None):
-    """
-    Starts "Nothing" Timer with the given punish val, tags, etc.
-    """
-    if(tags is None):
-        tags = []
-    new_desc = gen_new_desc(
-        toggl.NOTHING_TIMER_NAME, punish_val, start + timedelta(minutes=2)
-    )
-    tags += last_update_tags(punish_val) # tells you the min as well, telling you extra sits
-    telegram.message('Nothing Timer started!')
-    telegram.call()
-    toggl.start_timer(start, new_desc, workspace_id, tags)
+# def start_nothing_timer(workspace_id, start, punish_val = None, tags = None):
+#     """
+#     Starts "Nothing" Timer with the given punish val, tags, etc.
+#     """
+#     if(tags is None):
+#         tags = []
+#     new_desc = gen_new_desc(
+#         toggl.NOTHING_TIMER_NAME, punish_val, start + timedelta(minutes=2)
+#     )
+#     tags += last_update_tags(punish_val) # tells you the min as well, telling you extra sits
+#     telegram.message('Nothing Timer started!')
+#     telegram.call()
+#     toggl.start_timer(start, new_desc, workspace_id, tags)
 
-def last_update_tags(punish_val):
-    """
-    Helper function to generate tags
-    """
-    cur_time = toggl.get_now()
-    return ["waste", f"LU-{cur_time.hour}:{cur_time.minute}-P-{punish_val}"]
+# def last_update_tags(punish_val):
+#     """
+#     Helper function to generate tags
+#     """
+#     cur_time = toggl.get_now()
+#     return ["waste", f"LU-{cur_time.hour}:{cur_time.minute}-P-{punish_val}"]
 
 def main():
     """
     The main function.
     """
 
-    
+
 
 
     # NUM_REGEX = r"\d+"
     # TIME_REGEX = r"(\d{1,2}):(\d{2})"
 
-    regexs = {}
-    regexs["time"] = r"\((\d{1,2}):(\d{1,2})\)"
-    regexs["duration"] = r"\((\d+)\)"
-    regexs["count"] = r"\(\s*count:\s*(\d+)\s*\)"
+    regexs = punish.regex_dict
+    # regexs["time"] = r"\((\d{1,2}):(\d{1,2})\)"
+    # regexs["duration"] = r"\((\d+)\)"
+    # regexs["count"] = r"\(\s*count:\s*(\d+)\s*\)"
 
     logging.info("Entered Main V3")
 
@@ -167,7 +173,7 @@ def main():
             last_entry = toggl.get_last_entry()
             start = toggl.get_end_from_last_entry(last_entry)
             tags = last_entry["tags"]
-            start_nothing_timer(workspace_id, start, None, tags)
+            punish.start_nothing_timer(workspace_id, start, None, tags)
             #toggl.start_timer(start, desc, workspace_id)
             cur_timer = toggl.get_curr_timer()
         
@@ -200,7 +206,7 @@ def main():
         #
         #         break
 
-        results = get_results(regexs, desc)
+        results = punish.get_results(regexs, desc)
         logging.info("Results of parsing: %s", results)
         if results["time"]:
             try:
@@ -220,17 +226,17 @@ def main():
         if not results["count"]:
             entries = toggl.get_entries()
             for entry in entries:
-                results = get_results(regexs, entry["description"])
+                results = punish.get_results(regexs, entry["description"])
                 if results["count"]:
                     break
             else:
                 results["count"] = ["0"]
 
-        punish_val = update_punish_val(int(results["count"][0]))
+        punish_val = punish.clamp_punish_val(int(results["count"][0]))
 
         logging.info("Final punish val: %d", punish_val)
 
-        desc_no_extras = remove_extras(regexs, desc)
+        desc_no_extras = punish.remove_extras(regexs, desc)
 
         logging.info("Description with no extras: %s", desc_no_extras)
 
@@ -243,17 +249,17 @@ def main():
         if is_nothing:
             end = start + timedelta(minutes=toggl.NOTHING_THRESH)
 
-        new_desc = gen_new_desc(desc_no_extras, punish_val, end)
+        new_desc = punish.gen_new_desc(desc_no_extras, punish_val, end)
 
         if desc_no_extras == toggl.PUNISH_TIMER_NAME:
             extra_tags = []
             if cur_time.time() > time(0, 30, 0) and cur_time.time() < time(1, 0, 0):
-                count_since_start = int((cur_time_utc - start).total_seconds() / PERIOD)
+                count_since_start = int((cur_time_utc - start).total_seconds() / punish.PERIOD)
                 count_since_start = min(count_since_start, 120)
-                punish_val = update_punish_val(punish_val - count_since_start)
+                punish_val = punish.clamp_punish_val(punish_val - count_since_start)
                 logging.info("Count since start: %d", count_since_start)
                 new_desc = f"(06:00)Sleep(count: {punish_val})"
-                extra_tags = last_update_tags(punish_val)
+                extra_tags = punish.last_update_tags(punish_val)
                 logging.info(
                     "Created a sleep toggl timer, new punish val: %d", punish_val
                 )
@@ -262,31 +268,31 @@ def main():
                 logging.info("Last time timer updated: %s", last_update)
                 time_since_update = cur_time_utc - last_update
                 secs_since_update = time_since_update.total_seconds()
-                punish_amount = round(secs_since_update / PERIOD)
-                punish_val = update_punish_val(punish_val + punish_amount)
+                punish_amount = round(secs_since_update / punish.PERIOD)
+                punish_val = punish.clamp_punish_val(punish_val + punish_amount)
                 # last_update = cur_time_utc
-                new_desc = gen_new_desc(desc_no_extras, punish_val)
+                new_desc = punish.gen_new_desc(desc_no_extras, punish_val)
             toggl.update_timer(cur_timer, new_desc, extra_tags)
 
         elif (cur_time.time() >= time(22, 30, 0) and "sleep" not in desc_no_extras.casefold()) or desc_no_extras == "" or desc_no_extras.isspace() or cur_time_utc >= end or (end - start >= timedelta(hours=5) and local_start.hour > 3 and local_start.hour < 21) or (end - start >= timedelta(hours=8)):
             if is_nothing:
                 extra = (cur_time_utc - end).total_seconds()
-                extra = int(extra / PERIOD)
+                extra = int(extra / punish.PERIOD)
 
-                punish_val = update_punish_val(
+                punish_val = punish.clamp_punish_val(
                     punish_val + cur_time.minute + extra
                 )
 
-                new_desc = gen_new_desc(toggl.PUNISH_TIMER_NAME, punish_val)
+                new_desc = punish.gen_new_desc(toggl.PUNISH_TIMER_NAME, punish_val)
 
                 # last_update = cur_time_utc
 
-                toggl.start_timer(cur_time_utc, new_desc, workspace_id, last_update_tags(punish_val), cur_timer["tags"])
+                toggl.start_timer(cur_time_utc, new_desc, workspace_id, punish.last_update_tags(punish_val), cur_timer["tags"])
             else:
                 # if desc_no_extras == "" or desc_no_extras.isspace():
                 if not cur_time_utc >= end:
                     end = toggl.get_now_utc()
-                start_nothing_timer(workspace_id, end, punish_val, cur_timer["tags"])
+                punish.start_nothing_timer(workspace_id, end, punish_val, cur_timer["tags"])
                 # new_desc = gen_new_desc(
                 #     toggl.NOTHING_TIMER_NAME, punish_val, end + timedelta(minutes=2)
                 # )
