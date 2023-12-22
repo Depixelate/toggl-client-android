@@ -2,11 +2,9 @@
 Checks toggl track to see if person idle for too long, if so punishes them.
 """
 import logging
-import re
 from time import sleep
 from datetime import time, timedelta
 import azure.functions as func
-import toggl_punish_utils.telegram as telegram
 import toggl_punish_utils.habitica as habitica
 import toggl_punish_utils.toggl as toggl
 import toggl_punish_utils.punish as punish
