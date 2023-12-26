@@ -155,7 +155,7 @@ def calc_duration(start: datetime):
     to calculate the duration to show on the mini-timer, instead of calculating it
     from start, as the V8 api says.
     """
-    return -int(start.timestamp())
+    return -int(start.timestamp()) + 30 # for some reason offset required, otherwise shows negative numbers.
 
 
 def start_timer(
