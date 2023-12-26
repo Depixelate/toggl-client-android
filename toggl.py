@@ -159,7 +159,7 @@ def calc_duration(start: datetime):
 
 
 def start_timer(
-    start: datetime, desc: str, workspace_id: int, tags: list[str] = None, old_timer_tags = None
+    start: datetime, desc: str, workspace_id: int, tags: list[str]|None = None, old_timer_tags = None
 ):
     """
     starts a running timer with the given start date and description in the
@@ -250,7 +250,10 @@ def to_utc(d_time: datetime):
     """
     converts an aware datetime with a given utc offset to the same datetime in UTC.
     """
-    return d_time.replace(tzinfo=timezone.utc) - d_time.utcoffset()
+    utc_offset = d_time.utcoffset()
+    if utc_offset is None:
+        raise ValueError("datetime must be aware")
+    return d_time.replace(tzinfo=timezone.utc) - utc_offset
 
 
 def to_local(d_time: datetime):
