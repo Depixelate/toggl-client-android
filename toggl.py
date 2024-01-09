@@ -108,7 +108,7 @@ def get_entries():
     data.raise_for_status()
     json = data.json()
     logging.info("Latest entry: %s", json[0])
-    logging.debug("Response: %s", data)
+    logging.debug("Response: %s", log_str(data))
     return json
 
 
@@ -199,6 +199,21 @@ def start_timer(
     data.raise_for_status()
     logging.debug("Response: %s", log_str(data))
     return data.json()
+
+def stop_cur_timer(cur_timer_id):
+    """
+    Stops the currently running timer in Toggl Track
+    """
+    data = requests.patch(
+        f"https://api.track.toggl.com/api/v9/me/time_entries/{cur_timer_id}/stop",
+        auth=(API_TOKEN, "api_token"),
+        headers={"content-type": "application/json"},
+        timeout=request_utils.TIMEOUT,
+    )
+    data.raise_for_status()
+    json = data.json()
+    logging.debug("Response: %s", log_str(data))
+    return json
 
 
 def update_timer(old_timer, new_desc, extra_tags = None):
