@@ -155,11 +155,11 @@ def calc_duration(start: datetime):
     to calculate the duration to show on the mini-timer, instead of calculating it
     from start, as the V8 api says.
     """
-    return -int(start.timestamp()) + 30 # for some reason offset required, otherwise shows negative numbers.
+    return -int(start.timestamp())
 
 
 def start_timer(
-    start: datetime, desc: str, workspace_id: int, tags, old_timer_tags = None
+    start: datetime, desc: str, workspace_id: int, tags=None, old_timer_tags = None
 ):
     """
     starts a running timer with the given start date and description in the
@@ -170,6 +170,7 @@ def start_timer(
     if old_timer_tags is None:
         old_timer_tags = []
     tags = list(tags + old_timer_tags)
+    start = start - timedelta(seconds=16)
     logging.info(
         "Starting New Timer: start=%s, desc=%s, workspace_id=%s, tags=%s",
         start,
