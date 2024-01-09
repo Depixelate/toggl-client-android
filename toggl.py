@@ -159,7 +159,7 @@ def calc_duration(start: datetime):
 
 
 def start_timer(
-    start: datetime, desc: str, workspace_id: int, tags=None, old_timer_tags = None
+    start: datetime, desc: str, workspace_id: int, tags=None, old_timer_tags = None, start_adjust = 16
 ):
     """
     starts a running timer with the given start date and description in the
@@ -170,7 +170,7 @@ def start_timer(
     if old_timer_tags is None:
         old_timer_tags = []
     tags = list(tags + old_timer_tags)
-    start = start - timedelta(seconds=16)
+    start = start - timedelta(seconds=start_adjust)
     logging.info(
         "Starting New Timer: start=%s, desc=%s, workspace_id=%s, tags=%s",
         start,
@@ -200,12 +200,13 @@ def start_timer(
     logging.debug("Response: %s", log_str(data))
     return data.json()
 
-def stop_cur_timer(cur_timer_id):
+def stop_cur_timer(workspace_id, cur_timer_id):
     """
     Stops the currently running timer in Toggl Track
     """
+
     data = requests.patch(
-        f"https://api.track.toggl.com/api/v9/me/time_entries/{cur_timer_id}/stop",
+        f"https://api.track.toggl.com/api/v9/workspaces/{workspace_id}/time_entries/{cur_timer_id}/stop",
         auth=(API_TOKEN, "api_token"),
         headers={"content-type": "application/json"},
         timeout=request_utils.TIMEOUT,
