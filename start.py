@@ -26,22 +26,23 @@ def print_cur_timer(cur_timer):
     if cur_timer is not None:
         print(f"Current Timer: {cur_timer['description']}")
     else:
-        print("No Timer Running")
+        print("No Timer Running/Unable to get Current Timer")
 
 def main():
+    workspace_id = ru.run_request(toggl.get_default_workspace_id)
 
     while True:
         desc = input("Enter timer description: ")
         if desc.strip().casefold() == "r":
             cur_timer = get_cur_timer()
             print_cur_timer(cur_timer)
-        elif desc.strip.casefold() == "":
+        elif desc.strip().casefold() == "":
             cur_timer = get_cur_timer()
             print_cur_timer(cur_timer)
-            ru.run_request(toggl.stop_cur_timer(cur_timer), retry=False, timeout=(5, 15))
-            print("Current Timer Stopped!")
-        else:
-            workspace_id = ru.run_request(toggl.get_default_workspace_id)
+            if(cur_timer is not None):
+                ru.run_request(toggl.stop_cur_timer, workspace_id, cur_timer["id"], retry=False, timeout=(5, 15))
+                print("Current Timer Stopped!")
+        else:        
             ru.run_request(toggl.start_timer, toggl.get_now_utc(), desc, workspace_id)
             print("Timer started successfully!")
             cur_timer = get_cur_timer()
