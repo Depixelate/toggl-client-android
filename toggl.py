@@ -205,6 +205,8 @@ def stop_cur_timer(workspace_id, cur_timer_id):
     Stops the currently running timer in Toggl Track
     """
 
+    logging.info("Stopping currently running timer...")
+
     data = requests.patch(
         f"https://api.track.toggl.com/api/v9/workspaces/{workspace_id}/time_entries/{cur_timer_id}/stop",
         auth=(API_TOKEN, "api_token"),
