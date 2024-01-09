@@ -15,10 +15,13 @@ def run_request(func, *args, retry = True, timeout=None, delay = None):
     global TIMEOUT
     if(timeout is None):
         timeout = TIMEOUT
+
     original_timeout = TIMEOUT
     TIMEOUT = timeout
+
     if(delay is None):
         delay = DELAY
+        
     data = None
     while True:
         try:
