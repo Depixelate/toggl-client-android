@@ -41,7 +41,7 @@ class Regex:
     """
 
     TIME = r"\((s?\d{1,2}):(\d{1,2})\)"
-    DURATION = r"\((s?\d+)\)"
+    DURATION = r"\((\d+)\)"
     COUNT = r"\(\s*count:\s*(\d+)\s*\)"
     # TIME = r"^\((\d{1,2}):(\d{1,2})\)"
     # DURATION = r"^\((\d+)\)"
