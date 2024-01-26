@@ -159,7 +159,7 @@ def calc_duration(start: datetime):
 
 
 def start_timer(
-    start: datetime, desc: str, workspace_id: int, tags=None, old_timer_tags = None, start_adjust = 16
+    start: datetime, desc: str, workspace_id: int, tags=None, old_timer_tags = None, start_adjust = 0
 ):
     """
     starts a running timer with the given start date and description in the

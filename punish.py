@@ -56,7 +56,6 @@ regex_dict = {"time": Regex.TIME, "duration": Regex.DURATION, "count": Regex.COU
 
 # Porcelein
 
-
 def get_last_count():
     """
     Looks at the currently running entries, and based on that, returns the count value of the latest entry.
@@ -160,18 +159,18 @@ def start_nothing_timer(workspace_id, start, punish_val = None, tags = None, is_
     new_desc = gen_new_desc(
         toggl.NOTHING_TIMER_NAME, punish_val, start + timedelta(minutes=2), is_timed_task
     )
-    tags += last_update_tags(punish_val) # tells you the min as well, telling you extra sits
+    tags += last_update_tags(punish_val, "NS") # tells you the min as well, telling you extra sits
     if not is_timed_task:
         telegram.message('Nothing Timer started!')
         telegram.call()
     toggl.start_timer(start, new_desc, workspace_id, tags)
 
-def last_update_tags(punish_val):
+def last_update_tags(punish_val, timer_code):
     """
     Helper function to generate tags
     """
     cur_time = toggl.get_now()
-    return ["waste", f"LU-{cur_time.hour}:{cur_time.minute}-P-{punish_val}"]
+    return ["waste", f"LU-{timer_code}-{cur_time.hour}:{cur_time.minute}-P-{punish_val}"]
 
 # regexs = {k.lower() : v for k, v in vars(Regex)} //doesn't work, includes extra stuff.
 
